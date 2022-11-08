@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const { MongoClient, ServerApiVersion } = require("mongodb");
+const { query } = require("express");
 const app = express();
 const port = process.env.PORT || 5000;
 require("dotenv").config();
@@ -17,7 +18,6 @@ app.listen(port, () => {
 });
 
 const uri = `mongodb+srv://${process.env.PLAW_DBUSER}:${process.env.PLAW_DBPASS}@cluster0.gqpfnmn.mongodb.net/?retryWrites=true&w=majority`;
-console.log(uri);
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -26,6 +26,14 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     const servicesCollection = client.db("precisionLaw").collection("sevices");
+    const blogsCollection = client.db("precisionLaw").collection("blogs");
+
+    app.get("/blogs", async (req, res) => {
+      const query = {};
+      const cursor = blogsCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
   } finally {
   }
 }
