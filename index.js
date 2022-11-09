@@ -35,6 +35,13 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/lastServices", async (req, res) => {
+      const query = {};
+      const cursor = servicesCollection.find(query).limit(3);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
     app.post("/addService", async (req, res) => {
       const newService = req.body;
       const result = await servicesCollection.insertOne(newService);
