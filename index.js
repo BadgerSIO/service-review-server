@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const { query } = require("express");
 const app = express();
 const port = process.env.PORT || 5000;
@@ -45,6 +45,14 @@ async function run() {
       const query = {};
       const cursor = servicesCollection.find(query);
       const result = await cursor.toArray();
+      res.send(result);
+    });
+    app.get("/sdetail/:id", async (req, res) => {
+      let reqId = req.params.id;
+      const query = {
+        _id: ObjectId(reqId),
+      };
+      const result = await servicesCollection.findOne(query);
       res.send(result);
     });
 
