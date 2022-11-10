@@ -18,6 +18,23 @@ app.listen(port, () => {
   console.log(`precision law server is running on port: ${port}`);
 });
 
+const verifyJwt = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).send({ message: "saad err 1 Unauthorized access" });
+  }
+  const token = authHeader.split(" ")[1];
+  jwt.verify(token, process.env.JWT_TOKEN, function (err, decoded) {
+    if (err) {
+      return res
+        .status(401)
+        .send({ message: "saad err 2  Unauthorized access" });
+    }
+    req.decoded = decoded;
+    next();
+  });
+};
+
 const uri = `mongodb+srv://${process.env.PLAW_DBUSER}:${process.env.PLAW_DBPASS}@cluster0.gqpfnmn.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
@@ -30,6 +47,13 @@ async function run() {
     const blogsCollection = client.db("precisionLaw").collection("blogs");
     const reviewCollection = client.db("precisionLaw").collection("reviews");
 
+    app.post("/jwt", async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.JWT_TOKEN, {
+        expiresIn: "5hr",
+      });
+      res.send({ token });
+    });
     app.get("/blogs", async (req, res) => {
       const query = {};
       const cursor = blogsCollection.find(query);
@@ -74,7 +98,10 @@ async function run() {
 
       res.send(results);
     });
-    app.get("/myReviews", async (req, res) => {
+    app.get("/myReviews", verifyJwt, async (req, res) => {
+      if (req.decoded.email !== req.query.email) {
+        res.status(403).send({ message: "saad err 3 access forbidden" });
+      }
       const query = {
         author: req.query.email,
       };
@@ -104,7 +131,6 @@ async function run() {
     app.patch("/updateReview/:id", async (req, res) => {
       const revid = req.params.id;
       const updateRev = req.body;
-      console.log(updateRev.reviewtxt);
       const query = {
         _id: ObjectId(revid),
       };
