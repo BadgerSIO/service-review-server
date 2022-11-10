@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+var jwt = require("jsonwebtoken");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const { query } = require("express");
 const app = express();
@@ -56,6 +57,14 @@ async function run() {
       const result = await servicesCollection.findOne(query);
       res.send(result);
     });
+    app.get("/singleReview/:id", async (req, res) => {
+      let reqId = req.params.id;
+      const query = {
+        _id: ObjectId(reqId),
+      };
+      const result = await reviewCollection.findOne(query);
+      res.send(result);
+    });
     app.get("/getReviews", async (req, res) => {
       const query = {
         serviceId: `${req.query.serviceId}`,
@@ -73,6 +82,12 @@ async function run() {
       const results = await cursor.toArray();
       res.send(results);
     });
+    app.get("/allReviews", async (req, res) => {
+      const query = {};
+      const cursor = reviewCollection.find(query).limit(3);
+      const results = await cursor.toArray();
+      res.send(results);
+    });
 
     app.post("/addService", async (req, res) => {
       const newService = req.body;
@@ -83,6 +98,29 @@ async function run() {
       const newReview = req.body;
 
       const result = await reviewCollection.insertOne(newReview);
+      res.send(result);
+    });
+
+    app.patch("/updateReview/:id", async (req, res) => {
+      const revid = req.params.id;
+      const updateRev = req.body;
+      console.log(updateRev.reviewtxt);
+      const query = {
+        _id: ObjectId(revid),
+      };
+      const updateDoc = {
+        $set: {
+          reviewtxt: updateRev.reviewtxt,
+        },
+      };
+      const result = await reviewCollection.updateOne(query, updateDoc);
+      res.send(result);
+    });
+
+    app.delete("/deleteReview/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await reviewCollection.deleteOne(query);
       res.send(result);
     });
   } finally {
