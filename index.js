@@ -27,6 +27,7 @@ async function run() {
   try {
     const servicesCollection = client.db("precisionLaw").collection("sevices");
     const blogsCollection = client.db("precisionLaw").collection("blogs");
+    const reviewCollection = client.db("precisionLaw").collection("reviews");
 
     app.get("/blogs", async (req, res) => {
       const query = {};
@@ -37,7 +38,7 @@ async function run() {
 
     app.get("/lastServices", async (req, res) => {
       const query = {};
-      const cursor = servicesCollection.find(query).limit(3);
+      const cursor = servicesCollection.find(query).sort({ _id: -1 }).limit(3);
       const result = await cursor.toArray();
       res.send(result);
     });
@@ -59,6 +60,12 @@ async function run() {
     app.post("/addService", async (req, res) => {
       const newService = req.body;
       const result = await servicesCollection.insertOne(newService);
+      res.send(result);
+    });
+    app.post("/addReview", async (req, res) => {
+      const newReview = req.body;
+
+      const result = await reviewCollection.insertOne(newReview);
       res.send(result);
     });
   } finally {
